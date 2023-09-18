@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>450</width>
-    <height>540</height>
+    <height>635</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -160,6 +160,16 @@
        <widget class="QRadioButton" name="radioUseGlobalShareLimits">
         <property name="text">
          <string>Use global share limit</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroup</string>
+        </attribute>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="radioUseCategoryShareLimits">
+        <property name="text">
+         <string>Use category share limit</string>
         </property>
         <attribute name="buttonGroup">
          <string notr="true">buttonGroup</string>

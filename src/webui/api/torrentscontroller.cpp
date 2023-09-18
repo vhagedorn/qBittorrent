@@ -670,8 +670,8 @@ void TorrentsController::addAction()
     const QString torrentName = params()[u"rename"_qs].trimmed();
     const int upLimit = parseInt(params()[u"upLimit"_qs]).value_or(-1);
     const int dlLimit = parseInt(params()[u"dlLimit"_qs]).value_or(-1);
-    const double ratioLimit = parseDouble(params()[u"ratioLimit"_qs]).value_or(BitTorrent::Torrent::USE_GLOBAL_RATIO);
-    const int seedingTimeLimit = parseInt(params()[u"seedingTimeLimit"_qs]).value_or(BitTorrent::Torrent::USE_GLOBAL_SEEDING_TIME);
+    const double ratioLimit = parseDouble(params()[u"ratioLimit"_qs]).value_or(BitTorrent::Torrent::USE_CATEGORY_RATIO);
+    const int seedingTimeLimit = parseInt(params()[u"seedingTimeLimit"_qs]).value_or(BitTorrent::Torrent::USE_CATEGORY_SEEDING_TIME);
     const std::optional<bool> autoTMM = parseBool(params()[u"autoTMM"_qs]);
 
     const QString stopConditionParam = params()[u"stopCondition"_qs];
@@ -1240,6 +1240,18 @@ void TorrentsController::createCategoryAction()
         categoryOptions.downloadPath = {useDownloadPath.value(), downloadPath};
     }
 
+    const auto ratioLimit = parseDouble(params()[u"ratioLimit"_qs]);
+    if (ratioLimit.has_value())
+        categoryOptions.ratioLimit = ratioLimit.value();
+    else
+        categoryOptions.ratioLimit = BitTorrent::Torrent::USE_GLOBAL_RATIO;
+
+    const auto seedingTime = parseInt(params()[u"seedingTime"_qs]);
+    if (seedingTime.has_value())
+        categoryOptions.seedingTime = seedingTime.value();
+    else
+        categoryOptions.seedingTime = BitTorrent::Torrent::USE_GLOBAL_SEEDING_TIME;
+
     if (!BitTorrent::Session::instance()->addCategory(category, categoryOptions))
         throw APIError(APIErrorType::Conflict, tr("Unable to create category"));
 }
@@ -1261,6 +1273,18 @@ void TorrentsController::editCategoryAction()
         const Path downloadPath {params()[u"downloadPath"_qs]};
         categoryOptions.downloadPath = {useDownloadPath.value(), downloadPath};
     }
+
+    const auto ratioLimit = parseDouble(params()[u"ratioLimit"_qs]);
+    if (ratioLimit.has_value())
+        categoryOptions.ratioLimit = ratioLimit.value();
+    else
+        categoryOptions.ratioLimit = BitTorrent::Torrent::USE_GLOBAL_RATIO;
+
+    const auto seedingTime = parseInt(params()[u"seedingTime"_qs]);
+    if (seedingTime.has_value())
+        categoryOptions.seedingTime = seedingTime.value();
+    else
+        categoryOptions.seedingTime = BitTorrent::Torrent::USE_GLOBAL_SEEDING_TIME;
 
     if (!BitTorrent::Session::instance()->editCategory(category, categoryOptions))
         throw APIError(APIErrorType::Conflict, tr("Unable to edit category"));
@@ -1287,6 +1311,8 @@ void TorrentsController::categoriesAction()
         QJsonObject category = categoryOptions.toJSON();
         // adjust it to be compatible with existing WebAPI
         category[u"savePath"_qs] = category.take(u"save_path"_qs);
+        category[u"ratioLimit"_qs] = category.take(u"ratio_limit"_qs);
+        category[u"seedingTime"_qs] = category.take(u"seeding_time"_qs);
         category.insert(u"name"_qs, categoryName);
         categories[categoryName] = category;
     }

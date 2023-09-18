@@ -262,7 +262,7 @@ const initializeWindows = function() {
                 paddingVertical: 0,
                 paddingHorizontal: 0,
                 width: 424,
-                height: 175
+                height: 185
             });
         }
     };
@@ -572,8 +572,8 @@ const initializeWindows = function() {
             maximizable: false,
             paddingVertical: 0,
             paddingHorizontal: 0,
-            width: 400,
-            height: 150
+            width: 425,
+            height: 235
         });
         updateMainData();
     };
@@ -582,18 +582,20 @@ const initializeWindows = function() {
         const action = "edit";
         const categoryName = category_list[categoryHash].name;
         const savePath = category_list[categoryHash].savePath;
+        const ratioLimit = category_list[categoryHash].ratioLimit;
+        const seedingTime = category_list[categoryHash].seedingTime;
         new MochaUI.Window({
             id: 'editCategoryPage',
             title: "QBT_TR(Edit Category)QBT_TR[CONTEXT=TransferListWidget]",
             loadMethod: 'iframe',
-            contentURL: new URI('newcategory.html').setData("action", action).setData("categoryName", categoryName).setData("savePath", savePath).toString(),
+            contentURL: new URI('newcategory.html').setData("action", action).setData("categoryName", categoryName).setData("savePath", savePath).setData("ratioLimit", ratioLimit).setData("seedingTime", seedingTime).toString(),
             scrollbars: false,
             resizable: true,
             maximizable: false,
             paddingVertical: 0,
             paddingHorizontal: 0,
-            width: 400,
-            height: 150
+            width: 425,
+            height: 235
         });
         updateMainData();
     };

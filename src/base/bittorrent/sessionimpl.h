@@ -466,8 +466,8 @@ namespace BitTorrent
         explicit SessionImpl(QObject *parent = nullptr);
         ~SessionImpl();
 
-        bool hasPerTorrentRatioLimit() const;
-        bool hasPerTorrentSeedingTimeLimit() const;
+        bool hasManagedRatioLimit() const;
+        bool hasManagedSeedingTimeLimit() const;
 
         // Session configuration
         Q_INVOKABLE void configure();

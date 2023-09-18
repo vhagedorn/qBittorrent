@@ -49,11 +49,21 @@ TorrentCategoryDialog::TorrentCategoryDialog(QWidget *parent)
     m_ui->comboDownloadPath->setEnabled(false);
     m_ui->labelDownloadPath->setEnabled(false);
 
+    m_ui->labelRatioLimitValue->setEnabled(false);
+    m_ui->spinRatioLimit->setEnabled(false);
+
+    m_ui->labelSeedingTimeValue->setEnabled(false);
+    m_ui->spinSeedingTime->setEnabled(false);
+
     // disable save button
     m_ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
 
     connect(m_ui->textCategoryName, &QLineEdit::textChanged, this, &TorrentCategoryDialog::categoryNameChanged);
     connect(m_ui->comboUseDownloadPath, &QComboBox::currentIndexChanged, this, &TorrentCategoryDialog::useDownloadPathChanged);
+    connect(m_ui->comboRatioLimit, &QComboBox::currentIndexChanged, this, &TorrentCategoryDialog::ratioLimitModeChanged);
+    connect(m_ui->spinRatioLimit, &QDoubleSpinBox::valueChanged, this, &TorrentCategoryDialog::ratioLimitChanged);
+    connect(m_ui->comboSeedingTime, &QComboBox::currentIndexChanged, this, &TorrentCategoryDialog::seedingTimeModeChanged);
+    connect(m_ui->spinSeedingTime, &QSpinBox::valueChanged, this, &TorrentCategoryDialog::seedingTimeChanged);
 }
 
 TorrentCategoryDialog::~TorrentCategoryDialog()
@@ -146,6 +156,8 @@ BitTorrent::CategoryOptions TorrentCategoryDialog::categoryOptions() const
         categoryOptions.downloadPath = {true, m_ui->comboDownloadPath->selectedPath()};
     else if (m_ui->comboUseDownloadPath->currentIndex() == 2)
         categoryOptions.downloadPath = {false, {}};
+    categoryOptions.ratioLimit = m_ratioLimit;
+    categoryOptions.seedingTime = m_seedingTime;
 
     return categoryOptions;
 }
@@ -163,6 +175,37 @@ void TorrentCategoryDialog::setCategoryOptions(const BitTorrent::CategoryOptions
         m_ui->comboUseDownloadPath->setCurrentIndex(0);
         m_ui->comboDownloadPath->setSelectedPath({});
     }
+
+    bool customRatioLimit = categoryOptions.ratioLimit >= 0;
+    m_ratioLimit = categoryOptions.ratioLimit;
+    m_ui->labelRatioLimitValue->setEnabled(customRatioLimit);
+    m_ui->spinRatioLimit->setEnabled(customRatioLimit);
+    m_ui->spinRatioLimit->setValue(customRatioLimit ? categoryOptions.ratioLimit : 0);
+    if (!customRatioLimit)
+    {
+        if (categoryOptions.ratioLimit <= BitTorrent::Torrent::USE_GLOBAL_RATIO)
+            m_ui->comboRatioLimit->setCurrentIndex(0);
+        if (categoryOptions.ratioLimit == BitTorrent::Torrent::NO_RATIO_LIMIT)
+            m_ui->comboRatioLimit->setCurrentIndex(1);
+    }
+    else
+        m_ui->comboRatioLimit->setCurrentIndex(2);
+
+    bool customSeedingTime = categoryOptions.seedingTime >= 0;
+    m_seedingTime = categoryOptions.seedingTime;
+    m_ui->labelSeedingTimeValue->setEnabled(customSeedingTime);
+    m_ui->spinSeedingTime->setEnabled(customSeedingTime);
+    m_ui->spinSeedingTime->setValue(customSeedingTime ? categoryOptions.seedingTime : 0);
+    if (!customSeedingTime)
+    {
+        if (categoryOptions.seedingTime <= BitTorrent::Torrent::USE_GLOBAL_SEEDING_TIME)
+            m_ui->comboSeedingTime->setCurrentIndex(0);
+        if (categoryOptions.seedingTime == BitTorrent::Torrent::NO_SEEDING_TIME_LIMIT)
+            m_ui->comboSeedingTime->setCurrentIndex(1);
+    }
+    else
+        m_ui->comboSeedingTime->setCurrentIndex(2);
+
 }
 
 void TorrentCategoryDialog::categoryNameChanged(const QString &categoryName)
@@ -192,4 +235,50 @@ void TorrentCategoryDialog::useDownloadPathChanged(const int index)
     const Path categoryPath = BitTorrent::Session::instance()->downloadPath() / Utils::Fs::toValidPath(categoryName);
     const bool useDownloadPath = (index == 1) || ((index == 0) && BitTorrent::Session::instance()->isDownloadPathEnabled());
     m_ui->comboDownloadPath->setPlaceholder(useDownloadPath ? categoryPath : Path());
+}
+
+void TorrentCategoryDialog::ratioLimitModeChanged(int index)
+{
+    switch (index)
+    {
+        case 0:
+            m_ratioLimit = BitTorrent::Torrent::USE_GLOBAL_RATIO;
+            break;
+        case 1:
+            m_ratioLimit = BitTorrent::Torrent::NO_RATIO_LIMIT;
+            break;
+        default:
+            m_ratioLimit = m_ui->spinRatioLimit->value();
+            break;
+    }
+    m_ui->labelRatioLimitValue->setEnabled(index == 2);
+    m_ui->spinRatioLimit->setEnabled(index == 2);
+}
+
+void TorrentCategoryDialog::ratioLimitChanged(const qreal value)
+{
+    m_ratioLimit = value;
+}
+
+void TorrentCategoryDialog::seedingTimeModeChanged(int index)
+{
+    switch (index)
+    {
+        case 0:
+            m_seedingTime = BitTorrent::Torrent::USE_GLOBAL_SEEDING_TIME;
+            break;
+        case 1:
+            m_seedingTime = BitTorrent::Torrent::NO_SEEDING_TIME_LIMIT;
+            break;
+        default:
+            m_seedingTime = m_ui->spinSeedingTime->value();
+            break;
+    }
+    m_ui->labelSeedingTimeValue->setEnabled(index == 2);
+    m_ui->spinSeedingTime->setEnabled(index == 2);
+}
+
+void TorrentCategoryDialog::seedingTimeChanged(int value)
+{
+    m_seedingTime = value;
 }

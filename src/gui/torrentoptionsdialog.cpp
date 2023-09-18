@@ -277,15 +277,24 @@ TorrentOptionsDialog::TorrentOptionsDialog(QWidget *parent, const QVector<BitTor
         && (firstTorrentRatio == BitTorrent::Torrent::USE_GLOBAL_RATIO)
         && (firstTorrentSeedingTime == BitTorrent::Torrent::USE_GLOBAL_SEEDING_TIME);
 
+    const bool useCategoryValue = allSameRatio && allSameSeedingTime
+                                && (firstTorrentRatio == BitTorrent::Torrent::USE_CATEGORY_RATIO)
+                                && (firstTorrentSeedingTime == BitTorrent::Torrent::USE_CATEGORY_SEEDING_TIME);
+
     if (!allSameRatio || !allSameSeedingTime)
     {
         m_ui->radioUseGlobalShareLimits->setChecked(false);
+        m_ui->radioUseCategoryShareLimits->setChecked(false);
         m_ui->radioNoLimit->setChecked(false);
         m_ui->radioTorrentLimit->setChecked(false);
     }
     else if (useGlobalValue)
     {
         m_ui->radioUseGlobalShareLimits->setChecked(true);
+    }
+    else if (useCategoryValue)
+    {
+        m_ui->radioUseCategoryShareLimits->setChecked(true);
     }
     else if ((firstTorrentRatio == BitTorrent::Torrent::NO_RATIO_LIMIT)
              && (firstTorrentSeedingTime == BitTorrent::Torrent::NO_SEEDING_TIME_LIMIT))
@@ -486,6 +495,9 @@ qreal TorrentOptionsDialog::getRatio() const
     if (m_ui->radioUseGlobalShareLimits->isChecked())
         return BitTorrent::Torrent::USE_GLOBAL_RATIO;
 
+    if (m_ui->radioUseCategoryShareLimits->isChecked())
+        return BitTorrent::Torrent::USE_CATEGORY_RATIO;
+
     if (m_ui->radioNoLimit->isChecked() || !m_ui->checkMaxRatio->isChecked())
         return BitTorrent::Torrent::NO_RATIO_LIMIT;
 
@@ -499,6 +511,9 @@ int TorrentOptionsDialog::getSeedingTime() const
 
     if (m_ui->radioUseGlobalShareLimits->isChecked())
         return BitTorrent::Torrent::USE_GLOBAL_SEEDING_TIME;
+
+    if (m_ui->radioUseCategoryShareLimits->isChecked())
+        return BitTorrent::Torrent::USE_CATEGORY_SEEDING_TIME;
 
     if (m_ui->radioNoLimit->isChecked() || !m_ui->checkMaxTime->isChecked())
         return  BitTorrent::Torrent::NO_SEEDING_TIME_LIMIT;

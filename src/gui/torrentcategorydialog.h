@@ -31,6 +31,7 @@
 #include <QDialog>
 
 #include "base/path.h"
+#include "base/bittorrent/torrent.h"
 
 namespace BitTorrent
 {
@@ -63,8 +64,14 @@ public:
 private slots:
     void categoryNameChanged(const QString &categoryName);
     void useDownloadPathChanged(int index);
+    void ratioLimitModeChanged(int index);
+    void ratioLimitChanged(qreal value);
+    void seedingTimeModeChanged(int index);
+    void seedingTimeChanged(int value);
 
 private:
     Ui::TorrentCategoryDialog *m_ui = nullptr;
     Path m_lastEnteredDownloadPath;
+    qreal m_ratioLimit = BitTorrent::Torrent::USE_GLOBAL_RATIO;
+    int m_seedingTime = BitTorrent::Torrent::USE_GLOBAL_SEEDING_TIME;
 };

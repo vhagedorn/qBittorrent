@@ -11,6 +11,9 @@
     <script>
         'use strict';
 
+        const UseGlobalLimit = -2;
+        const NoLimit = -1;
+
         new Keyboard({
             defaultEventType: 'keydown',
             events: {
@@ -29,11 +32,30 @@
             }
         }).activate();
 
+        const ratioLimitModeChanged = function() {
+            const customRatioLimit = $('ratiolimit_combobox').getProperty('value') === 'custom';
+            $('ratiolimit_label').set('disabled', !customRatioLimit);
+            $('ratiolimit_value').set('disabled', !customRatioLimit);
+        }
+
+        const seedingTimeModeChanged = function() {
+            const customSeedingTime = $('seedingtime_combobox').getProperty('value') === 'custom';
+            $('seedingtime_label').set('disabled', !customSeedingTime);
+            $('seedingtime_value').set('disabled', !customSeedingTime);
+        }
+
         window.addEvent('domready', function() {
             const uriAction = window.qBittorrent.Misc.safeTrim(new URI().getData('action'));
             const uriHashes = window.qBittorrent.Misc.safeTrim(new URI().getData('hashes'));
             const uriCategoryName = window.qBittorrent.Misc.safeTrim(new URI().getData('categoryName'));
             const uriSavePath = window.qBittorrent.Misc.safeTrim(new URI().getData('savePath'));
+            let uriRatioLimit = window.qBittorrent.Misc.safeTrim(new URI().getData('ratioLimit'));
+            let uriSeedingTime = window.qBittorrent.Misc.safeTrim(new URI().getData('seedingTime'));
+
+            // alert("uriSavePath " + uriSavePath + '\n' + "uriSeedingTime " + uriSeedingTime + '\n' + "uriRatioLimit " + uriRatioLimit)
+
+            uriRatioLimit = uriRatioLimit.toFloat();
+            uriSeedingTime = uriSeedingTime.toInt();
 
             if (uriAction === "edit") {
                 if (!uriCategoryName)
@@ -48,11 +70,73 @@
                 $('categoryName').focus();
             }
 
+            const customRatioLimit = uriRatioLimit >= 0;
+            $('ratiolimit_label').set('disabled', !customRatioLimit);
+            $('ratiolimit_value').set('disabled', !customRatioLimit);
+            $('ratiolimit_value').set('value', customRatioLimit ? uriRatioLimit.toFixed(2) : 0);
+            if (!customRatioLimit) {
+                if (uriRatioLimit <= UseGlobalLimit)
+                    $('ratiolimit_combobox').set('value', 'global');
+                if (uriRatioLimit === NoLimit)
+                    $('ratiolimit_combobox').set('value', 'none');
+            }
+            else
+                $('ratiolimit_combobox').set('value', 'custom');
+
+            const customSeedingTime = uriSeedingTime >= 0;
+            $('seedingtime_label').set('disabled', !customSeedingTime);
+            $('seedingtime_value').set('disabled', !customSeedingTime);
+            $('seedingtime_value').set('value', customSeedingTime ? uriSeedingTime : 0);
+            if (!customSeedingTime) {
+                if (uriSeedingTime <= UseGlobalLimit)
+                    $('seedingtime_combobox').set('value', 'global');
+                if (uriSeedingTime === NoLimit)
+                    $('seedingtime_combobox').set('value', 'none');
+            }
+            else
+                $('seedingtime_combobox').set('value', 'custom');
+
             $('categoryNameButton').addEvent('click', function(e) {
                 new Event(e).stop();
 
                 const savePath = $('savePath').value.trim();
                 const categoryName = $('categoryName').value.trim();
+
+                let max_ratio;
+                switch ($('ratiolimit_combobox').getProperty('value')) {
+                    case 'custom':
+                        max_ratio = $('ratiolimit_value').getProperty('value').toFloat();
+                        if (isNaN(max_ratio) || (max_ratio < 0) || (max_ratio > 9998)) {
+                            alert("QBT_TR(Share ratio limit must be between 0 and 9998.)QBT_TR[CONTEXT=HttpServer]");
+                            return;
+                        }
+                        break;
+                    case 'global':
+                        max_ratio = UseGlobalLimit;
+                        break;
+                    default:
+                        max_ratio = NoLimit;
+                        break;
+                }
+
+                let max_seeding_time;
+                switch($('seedingtime_combobox').getProperty('value')) {
+                    case 'custom':
+                        max_seeding_time = $('seedingtime_value').getProperty('value').toInt();
+                        if (isNaN(max_seeding_time) || (max_seeding_time < 0) || (max_seeding_time > 525600)) {
+                            alert("QBT_TR(Seeding time limit must be between 0 and 525600 minutes.)QBT_TR[CONTEXT=HttpServer]");
+                            return;
+                        }
+                        break;
+                    case 'global':
+                        max_seeding_time = UseGlobalLimit;
+                        break;
+                    default:
+                        max_seeding_time = NoLimit;
+                        break;
+                }
+
+                // alert("savePath " + savePath + '\n' + "max_ratio " + max_ratio + '\n' + "max_seeding_time " + max_seeding_time);
 
                 const verifyCategoryName = function(name) {
                     if ((name === null) || (name === ""))
@@ -74,7 +158,9 @@
                             method: 'post',
                             data: {
                                 category: categoryName,
-                                savePath: savePath
+                                savePath: savePath,
+                                ratioLimit: max_ratio,
+                                seedingTime: max_seeding_time
                             },
                             onSuccess: function() {
                                 new Request({
@@ -103,7 +189,9 @@
                             method: 'post',
                             data: {
                                 category: categoryName,
-                                savePath: savePath
+                                savePath: savePath,
+                                ratioLimit: max_ratio,
+                                seedingTime: max_seeding_time
                             },
                             onComplete: function() {
                                 window.parent.closeWindows();
@@ -116,7 +204,9 @@
                             method: 'post',
                             data: {
                                 category: uriCategoryName, // category name can't be changed
-                                savePath: savePath
+                                savePath: savePath,
+                                ratioLimit: max_ratio,
+                                seedingTime: max_seeding_time
                             },
                             onComplete: function() {
                                 window.parent.closeWindows();
@@ -135,6 +225,39 @@
         <input type="text" id="categoryName" style="width: 99%;" />
         <p style="font-weight: bold;">QBT_TR(Save path)QBT_TR[CONTEXT=TransferListWidget]:</p>
         <input type="text" id="savePath" style="width: 99%;" />
+        <p style="font-weight: bold;">QBT_TR(Seeding Limits)QBT_TR[CONTEXT=TransferListWidget]:</p>
+        <table style="width:99%;">
+            <tr>
+                <td>
+                    <label for="ratiolimit_combobox">QBT_TR(Ratio Limit)QBT_TR[CONTEXT=TransferListWidget]</label>
+                <td>
+                <td>
+                    <select id="ratiolimit_combobox" onchange="ratioLimitModeChanged();">
+                        <option value="global">QBT_TR(Use Global Limit)QBT_TR[CONTEXT=TransferListWidget]</option>
+                        <option value="none">QBT_TR(No Limit)QBT_TR[CONTEXT=TransferListWidget]</option>
+                        <option value="custom">QBT_TR(Custom Value)QBT_TR[CONTEXT=TransferListWidget]</option>
+                    </select>
+                    <label for="ratiolimit_value" id="ratiolimit_label" style="padding-left: 10%;">QBT_TR(Value)QBT_TR[CONTEXT=TransferListWidget]</label>
+                    <input type="text" id="ratiolimit_value" style="width: 4em;"/>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="seedingtime_combobox">QBT_TR(Seeding Time)QBT_TR[CONTEXT=TransferListWidget]</label>
+                <td>
+                <td>
+                    <select id="seedingtime_combobox" onchange="seedingTimeModeChanged();">
+                        <option value="global">QBT_TR(Use Global Limit)QBT_TR[CONTEXT=TransferListWidget]</option>
+                        <option value="none">QBT_TR(No Limit)QBT_TR[CONTEXT=TransferListWidget]</option>
+                        <option value="custom">QBT_TR(Custom Value)QBT_TR[CONTEXT=TransferListWidget]</option>
+                    </select>
+                    <label for="seedingtime_value" id="seedingtime_label" style="padding-left: 10%;">QBT_TR(Value)QBT_TR[CONTEXT=TransferListWidget]</label>
+                    <input type="text" id="seedingtime_value" style="width: 4em;"/>
+                    <span>QBT_TR(minutes)QBT_TR[CONTEXT=TransferListWidget]</span>
+                </td>
+            </tr>
+        </table>
+
         <div style="text-align: center; padding-top: 10px;">
             <input type="button" value="QBT_TR(Add)QBT_TR[CONTEXT=HttpServer]" id="categoryNameButton" />
         </div>

@@ -491,6 +491,8 @@ void SyncController::maindataAction()
         QJsonObject category = categoryOptions.toJSON();
         // adjust it to be compatible with existing WebAPI
         category[u"savePath"_qs] = category.take(u"save_path"_qs);
+        category[u"ratioLimit"_qs] = category.take(u"ratio_limit"_qs);
+        category[u"seedingTime"_qs] = category.take(u"seeding_time"_qs);
         category.insert(u"name"_qs, categoryName);
         categories[categoryName] = category.toVariantMap();
     }

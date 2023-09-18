@@ -46,9 +46,11 @@ namespace BitTorrent
 
     // Torrent
 
+    const qreal Torrent::USE_CATEGORY_RATIO = -3;
     const qreal Torrent::USE_GLOBAL_RATIO = -2;
     const qreal Torrent::NO_RATIO_LIMIT = -1;
 
+    const int Torrent::USE_CATEGORY_SEEDING_TIME = -3;
     const int Torrent::USE_GLOBAL_SEEDING_TIME = -2;
     const int Torrent::NO_SEEDING_TIME_LIMIT = -1;
 

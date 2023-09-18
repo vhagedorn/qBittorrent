@@ -119,9 +119,11 @@ namespace BitTorrent
         };
         Q_ENUM(StopCondition)
 
+        static const qreal USE_CATEGORY_RATIO;
         static const qreal USE_GLOBAL_RATIO;
         static const qreal NO_RATIO_LIMIT;
 
+        static const int USE_CATEGORY_SEEDING_TIME;
         static const int USE_GLOBAL_SEEDING_TIME;
         static const int NO_SEEDING_TIME_LIMIT;
 

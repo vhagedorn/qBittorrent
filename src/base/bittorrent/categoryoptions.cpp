@@ -32,9 +32,12 @@
 #include <QJsonValue>
 
 #include "base/global.h"
+#include "base/bittorrent/torrent.h"
 
 const QString OPTION_SAVEPATH = u"save_path"_qs;
 const QString OPTION_DOWNLOADPATH = u"download_path"_qs;
+const QString OPTION_RATIOLIMIT = u"ratio_limit"_qs;
+const QString OPTION_SEEDINGTIME = u"seeding_time"_qs;
 
 BitTorrent::CategoryOptions BitTorrent::CategoryOptions::fromJSON(const QJsonObject &jsonObj)
 {
@@ -46,6 +49,18 @@ BitTorrent::CategoryOptions BitTorrent::CategoryOptions::fromJSON(const QJsonObj
         options.downloadPath = {downloadPathValue.toBool(), {}};
     else if (downloadPathValue.isString())
         options.downloadPath = {true, Path(downloadPathValue.toString())};
+
+    const QJsonValue ratioLimitValue = jsonObj.value(OPTION_RATIOLIMIT);
+    if (ratioLimitValue.isDouble())
+        options.ratioLimit = { ratioLimitValue.toDouble() };
+    else
+        options.ratioLimit = { Torrent::USE_GLOBAL_RATIO };
+
+    const QJsonValue seedingTimeValue = jsonObj.value(OPTION_SEEDINGTIME);
+    if (!seedingTimeValue.isNull())
+        options.seedingTime = { seedingTimeValue.toInt() };
+    else
+        options.seedingTime = { Torrent::USE_GLOBAL_SEEDING_TIME };
 
     return options;
 }
@@ -63,7 +78,9 @@ QJsonObject BitTorrent::CategoryOptions::toJSON() const
 
     return {
         {OPTION_SAVEPATH, savePath.data()},
-        {OPTION_DOWNLOADPATH, downloadPathValue}
+        {OPTION_DOWNLOADPATH, downloadPathValue},
+        {OPTION_RATIOLIMIT, ratioLimit},
+        {OPTION_SEEDINGTIME, seedingTime}
     };
 }
 
@@ -76,5 +93,7 @@ bool BitTorrent::operator==(const BitTorrent::CategoryOptions::DownloadPathOptio
 bool BitTorrent::operator==(const BitTorrent::CategoryOptions &left, const BitTorrent::CategoryOptions &right)
 {
     return ((left.savePath == right.savePath)
-            && (left.downloadPath == right.downloadPath));
+            && (left.downloadPath == right.downloadPath)
+            && (left.ratioLimit == right.ratioLimit)
+            && (left.seedingTime == right.seedingTime));
 }

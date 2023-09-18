@@ -11,6 +11,7 @@
     <script>
         'use strict';
 
+        const UseCategoryLimit = -3;
         const UseGlobalLimit = -2;
         const NoLimit = -1;
 
@@ -44,9 +45,12 @@
             };
 
             // select default when orig values not passed. using double equals to compare string and int
-            if ((origValues[0] === "") || ((values.ratioLimit == UseGlobalLimit) && (values.seedingTimeLimit == UseGlobalLimit))) {
+            if ((origValues[0] === "") || ((values.ratioLimit == UseCategoryLimit) && (values.seedingTimeLimit == UseCategoryLimit))) {
                 // use default option
                 setSelectedRadioValue('shareLimit', 'default');
+            }
+            else if ((values.ratioLimit == UseGlobalLimit) && (values.seedingTimeLimit == UseGlobalLimit)) {
+                setSelectedRadioValue('shareLimit', 'global');
             }
             else if ((values.maxRatio == NoLimit) && (values.maxSeedingTime == NoLimit)) {
                 setSelectedRadioValue('shareLimit', 'none');
@@ -79,6 +83,9 @@
                 let seedingTimeLimitValue = 0;
 
                 if (shareLimit === 'default') {
+                    ratioLimitValue = seedingTimeLimitValue = UseCategoryLimit;
+                }
+                else if (shareLimit === 'global') {
                     ratioLimitValue = seedingTimeLimitValue = UseGlobalLimit;
                 }
                 else if (shareLimit === 'none') {
@@ -153,7 +160,8 @@
 
 <body>
     <div style="padding: 10px 10px 0px 10px;">
-        <input type="radio" name="shareLimit" id="default" value="default" onchange="shareLimitChanged()" checked style="margin-bottom: 5px;" />QBT_TR(Use global share limit)QBT_TR[CONTEXT=UpDownRatioDialog]</br>
+        <input type="radio" name="shareLimit" value="global" onchange="shareLimitChanged()" checked style="margin-bottom: 5px;" />QBT_TR(Use global share limit)QBT_TR[CONTEXT=UpDownRatioDialog]</br>
+        <input type="radio" name="shareLimit" id="default" value="default" onchange="shareLimitChanged()" style="margin-bottom: 5px;" />QBT_TR(Use category share limit)QBT_TR[CONTEXT=UpDownRatioDialog]</br>
         <input type="radio" name="shareLimit" value="none" onchange="shareLimitChanged()" style="margin-bottom: 5px;" />QBT_TR(Set no share limit)QBT_TR[CONTEXT=UpDownRatioDialog]</br>
         <input type="radio" name="shareLimit" value="custom" onchange="shareLimitChanged()" style="margin-bottom: 5px;" />QBT_TR(Set share limit to)QBT_TR[CONTEXT=UpDownRatioDialog]</br>
 

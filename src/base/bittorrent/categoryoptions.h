@@ -48,6 +48,8 @@ namespace BitTorrent
 
         Path savePath;
         std::optional<DownloadPathOption> downloadPath;
+        qreal ratioLimit;
+        int seedingTime;
 
         static CategoryOptions fromJSON(const QJsonObject &jsonObj);
         QJsonObject toJSON() const;

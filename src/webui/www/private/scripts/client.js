@@ -600,13 +600,20 @@ window.addEvent('load', function() {
                             const category = response['categories'][key];
                             const categoryHash = genHash(key);
                             if (category_list[categoryHash] !== undefined) {
-                                // only the save path can change for existing categories
-                                category_list[categoryHash].savePath = category.savePath;
+                                // apparently, the response only returns values which were modified
+                                if(category.savePath)
+                                    category_list[categoryHash].savePath = category.savePath;
+                                if(category.ratioLimit)
+                                    category_list[categoryHash].ratioLimit = category.ratioLimit;
+                                if(category.seedingTime)
+                                    category_list[categoryHash].seedingTime = category.seedingTime;
                             }
                             else {
                                 category_list[categoryHash] = {
                                     name: category.name,
                                     savePath: category.savePath,
+                                    ratioLimit: category.ratioLimit,
+                                    seedingTime: category.seedingTime,
                                     torrents: []
                                 };
                             }

@@ -1331,18 +1331,30 @@ qreal TorrentImpl::distributedCopies() const
 
 qreal TorrentImpl::maxRatio() const
 {
-    if (m_ratioLimit == USE_GLOBAL_RATIO)
-        return m_session->globalMaxRatio();
+    qreal limit = m_ratioLimit;
 
-    return m_ratioLimit;
+    if (limit == USE_CATEGORY_RATIO)
+        limit = m_session->categoryOptions(category()).ratioLimit;
+    if (limit == USE_GLOBAL_RATIO)
+        limit = m_session->globalMaxRatio();
+    if (limit < 0)
+        limit = NO_RATIO_LIMIT;
+
+    return limit;
 }
 
 int TorrentImpl::maxSeedingTime() const
 {
-    if (m_seedingTimeLimit == USE_GLOBAL_SEEDING_TIME)
-        return m_session->globalMaxSeedingMinutes();
+    int limit = m_seedingTimeLimit;
 
-    return m_seedingTimeLimit;
+    if (limit == USE_CATEGORY_SEEDING_TIME)
+        limit = m_session->categoryOptions(category()).seedingTime;
+    if (limit == USE_GLOBAL_SEEDING_TIME)
+        limit = m_session->globalMaxSeedingMinutes();
+    if (limit < 0)
+        limit = NO_SEEDING_TIME_LIMIT;
+
+    return limit;
 }
 
 qreal TorrentImpl::realRatio() const
@@ -2288,7 +2300,7 @@ void TorrentImpl::updateStatus(const lt::torrent_status &nativeStatus)
 
 void TorrentImpl::setRatioLimit(qreal limit)
 {
-    if (limit < USE_GLOBAL_RATIO)
+    if (limit < USE_CATEGORY_RATIO)
         limit = NO_RATIO_LIMIT;
     else if (limit > MAX_RATIO)
         limit = MAX_RATIO;
@@ -2303,7 +2315,7 @@ void TorrentImpl::setRatioLimit(qreal limit)
 
 void TorrentImpl::setSeedingTimeLimit(int limit)
 {
-    if (limit < USE_GLOBAL_SEEDING_TIME)
+    if (limit < USE_CATEGORY_SEEDING_TIME)
         limit = NO_SEEDING_TIME_LIMIT;
     else if (limit > MAX_SEEDING_TIME)
         limit = MAX_SEEDING_TIME;

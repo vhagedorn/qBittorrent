@@ -2018,10 +2018,7 @@ void SessionImpl::processShareLimits()
             if (torrent->ratioLimit() != Torrent::NO_RATIO_LIMIT)
             {
                 const qreal ratio = torrent->realRatio();
-                qreal ratioLimit = torrent->ratioLimit();
-                if (ratioLimit == Torrent::USE_GLOBAL_RATIO)
-                    // If Global Max Ratio is really set...
-                    ratioLimit = globalMaxRatio();
+                qreal ratioLimit = torrent->maxRatio(); // this returns the appropriate inherited value for this torrent
 
                 if (ratioLimit >= 0)
                 {
@@ -2061,12 +2058,7 @@ void SessionImpl::processShareLimits()
             if (torrent->seedingTimeLimit() != Torrent::NO_SEEDING_TIME_LIMIT)
             {
                 const qlonglong seedingTimeInMinutes = torrent->finishedTime() / 60;
-                int seedingTimeLimit = torrent->seedingTimeLimit();
-                if (seedingTimeLimit == Torrent::USE_GLOBAL_SEEDING_TIME)
-                {
-                     // If Global Seeding Time Limit is really set...
-                    seedingTimeLimit = globalMaxSeedingMinutes();
-                }
+                int seedingTimeLimit = torrent->maxSeedingTime(); // this returns the appropriate inherited value for this torrent
 
                 if (seedingTimeLimit >= 0)
                 {
@@ -4475,8 +4467,8 @@ bool SessionImpl::isKnownTorrent(const InfoHash &infoHash) const
 
 void SessionImpl::updateSeedingLimitTimer()
 {
-    if ((globalMaxRatio() == Torrent::NO_RATIO_LIMIT) && !hasPerTorrentRatioLimit()
-        && (globalMaxSeedingMinutes() == Torrent::NO_SEEDING_TIME_LIMIT) && !hasPerTorrentSeedingTimeLimit())
+    if ((globalMaxRatio() == Torrent::NO_RATIO_LIMIT) && !hasManagedRatioLimit()
+        && (globalMaxSeedingMinutes() == Torrent::NO_SEEDING_TIME_LIMIT) && !hasManagedSeedingTimeLimit())
         {
         if (m_seedingLimitTimer->isActive())
             m_seedingLimitTimer->stop();
@@ -4829,19 +4821,19 @@ void SessionImpl::loadCategories()
     }
 }
 
-bool SessionImpl::hasPerTorrentRatioLimit() const
+bool SessionImpl::hasManagedRatioLimit() const
 {
     return std::any_of(m_torrents.cbegin(), m_torrents.cend(), [](const TorrentImpl *torrent)
     {
-        return (torrent->ratioLimit() >= 0);
+        return (torrent->maxRatio() >= 0);
     });
 }
 
-bool SessionImpl::hasPerTorrentSeedingTimeLimit() const
+bool SessionImpl::hasManagedSeedingTimeLimit() const
 {
     return std::any_of(m_torrents.cbegin(), m_torrents.cend(), [](const TorrentImpl *torrent)
     {
-        return (torrent->seedingTimeLimit() >= 0);
+        return (torrent->maxSeedingTime() >= 0);
     });
 }
 
@@ -5211,7 +5203,7 @@ TorrentImpl *SessionImpl::createTorrent(const lt::torrent_handle &nativeHandle, 
         emit torrentAdded(torrent);
     }
 
-    // Torrent could have error just after adding to libtorrent
+    // Torrent could have errored just after adding to libtorrent
     if (torrent->hasError())
         LogMsg(tr("Torrent errored. Torrent: \"%1\". Error: \"%2\"").arg(torrent->name(), torrent->error()), Log::WARNING);
 
